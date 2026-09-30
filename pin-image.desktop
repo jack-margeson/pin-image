@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Pin Image
+Comment=Pin an image to the desktop (scroll to zoom, drag to move)
+Exec=pin-image %F
+Icon=image-x-generic
+Terminal=false
+NoDisplay=false
+Categories=Graphics;Viewer;
+MimeType=image/png;image/jpeg;image/bmp;image/gif;image/webp;
