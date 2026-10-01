@@ -4,9 +4,10 @@
 Usage: pin-image.py IMAGE [IMAGE ...]
 
   Mouse wheel         zoom in / out (anchored at the cursor)
+  Ctrl+mouse wheel    change opacity (10%-100%)
   Left-drag           move the image
   Double-click / Esc  close
-  Right-click         menu (reset zoom, copy, close)
+  Right-click         menu (reset zoom/opacity, copy, close)
   Ctrl+C              copy image to clipboard
   0                   reset zoom to 100%
 """
@@ -23,6 +24,9 @@ except ImportError:
 
 MIN_SIZE = 16
 ZOOM_STEP = 1.1
+OPACITY_STEP = 5  # percent per wheel notch
+MIN_OPACITY = 10
+MAX_OPACITY = 100
 
 
 class PinWindow(QWidget):
@@ -38,7 +42,10 @@ class PinWindow(QWidget):
             | Qt.WindowType.Tool
         )
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
+        # Paint opacity ourselves; setWindowOpacity() isn't supported on Wayland.
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.drag_offset = None
+        self.opacity = MAX_OPACITY  # percent
 
         # Device pixel ratio: show the screenshot at its native pixel size.
         dpr = self.devicePixelRatioF()
@@ -61,6 +68,7 @@ class PinWindow(QWidget):
 
     def paintEvent(self, event):
         p = QPainter(self)
+        p.setOpacity(self.opacity / 100)
         p.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, self.scale < 1.0)
         p.drawPixmap(self.rect(), self.pixmap)
         # Thin border so the pinned image stands out from what's underneath.
@@ -81,9 +89,17 @@ class PinWindow(QWidget):
         self.setGeometry(QRect(x, y, w, h))
         self.update()
 
+    def set_opacity(self, percent):
+        self.opacity = max(MIN_OPACITY, min(MAX_OPACITY, round(percent)))
+        self.update()
+
     def wheelEvent(self, event):
         steps = event.angleDelta().y() / 120
-        if steps:
+        if not steps:
+            return
+        if event.modifiers() & Qt.KeyboardModifier.ControlModifier:
+            self.set_opacity(self.opacity + steps * OPACITY_STEP)
+        else:
             self.set_scale(self.scale * ZOOM_STEP ** steps, event.position().toPoint())
 
     def mousePressEvent(self, event):
@@ -122,6 +138,7 @@ class PinWindow(QWidget):
         menu = QMenu(self)
         for label, fn in (
             (f"Zoom: {self.scale * 100:.0f}% — reset to 100%", lambda: self.set_scale(1.0)),
+            (f"Opacity: {self.opacity}% — reset to 100%", lambda: self.set_opacity(MAX_OPACITY)),
             ("Copy image", self.copy),
             ("Close", self.close),
         ):

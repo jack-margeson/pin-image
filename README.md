@@ -13,7 +13,7 @@ Drops a desktop entry in `~/.local/share/applications` to register it as a progr
 - Highlight a region for a screenshot with Spectacle (or other screenshot tool)
 - Export tab > "Other Application..."
 - Choose "Pin Image"
-- Image will be pinned to the desktop. Use M1 to move, scroll wheel to zoom
-- M2 brings up the context menu to reset zoom or close the pinned image
+- Image will be pinned to the desktop. Use M1 to move, scroll wheel to zoom, Ctrl + scroll wheel to change opacity (10%–100%)
+- M2 brings up the context menu to reset zoom/opacity or close the pinned image
 - "Pin Image" will appear under Export option for future screenshots
   
